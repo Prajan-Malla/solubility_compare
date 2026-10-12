@@ -1,0 +1,30 @@
+On the Delaney/ESOL dataset (1,128 molecules, 80/20 split, measured solubility as target),
+  Random Forest consistently outperformed Linear Regression**, regardless of which feature set was used:
+
+| Features | Linear R² | RF R² | Winner |
+|---|---|---|---|
+| Descriptors | 0.772 | 0.866 | RF |
+| Morgan fingerprints | 0.003 | 0.716 | RF |
+| Descriptors + Morgan | 0.024 | 0.870 | RF |
+
+Random Forest on descriptors + Morgan fingerprints was the best-performing model overall** (test R² = 0.870, RMSE = 0.785),
+with RF on descriptors alone a close second (R² = 0.866). This suggests the fingerprint bits carry some genuine additional 
+signal for RF, though the improvement over descriptors-alone (0.866 → 0.870) is small enough that it could just be noise
+from a single train/test split rather than a reliable effect.
+
+Linear Regression could not handle the high-dimensional fingerprint data. With 2,048 fingerprint features and only
+902 training molecules, Linear Regression overfit severely — train R² of 0.979–1.000 collapsed 
+to test R² near zero whenever fingerprints were included. This is a textbook case of a linear model with too many
+parameters relative to training examples; it memorized the training set instead of learning a generalizable relationship.
+  Linear Regression only produced a usable model when restricted to the 10 hand-crafted descriptors (R² = 0.772), where the feature-to-sample 
+  ratio is far more reasonable.
+
+Takeaway for this dataset, Random Forest is the clearly better model, and the gap is driven specifically by how each 
+model handles high-dimensional fingerprint features — Random Forest's tree-based splits aren't thrown off by many weakly-informative 
+  binary features the way ordinary least squares is. Molecular descriptors alone are a strong, nearly sufficient feature set for either model; 
+fingerprints only help when paired with a model (like RF) that can tolerate their dimensionality.
+
+Limitations worth noting before treating this as final: these numbers come from one random 80/20 split, 
+  so small differences (e.g., 0.866 vs. 0.870) aren't meaningful on their own. Random splits can also overstate performance for molecular data, since structurally
+similar molecules can land in both train and test sets; a scaffold split would be a stronger test of real generalization. 
+  Neither model was hyperparameter-tuned, so this is a baseline comparison, not necessarily each model's best possible performance.
